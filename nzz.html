@@ -63,10 +63,8 @@
             const title = escapeHtml(item.item.asset.title);
             const id = item.item.asset.id;
             const commentId = item.item.id;
-            let host = new URL(item.item.asset.url).hostname;
-            host = host.replace("https://.", "").replace("www.", "").replace(".ch", "");
             // paywall bypass
-            const url = `https://vamp.nzz.ch/${host}/webview/ld.${id}?commentId=${commentId}`;
+            const url = `https://vamp.nzz.ch/webview/ld.${id}?commentId=${commentId}`;
             const body = escapeHtml(item.item.body);
             const flags = item.flags;
             const likes = item.likes;
