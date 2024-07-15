@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NZZ Comments Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .comment {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .comment-header {
+            font-weight: bold;
+        }
+        .comment-body {
+            margin-top: 10px;
+            font-style: italic;
+        }
+        .comment-footer {
+            margin-top: 10px;
+            color: #555;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>NZZ Comment Viewer</h1>
+    <p>This page displays the 3 most flagged and most liked comments from NZZ from the <b>last 48h.</b></p>
+
+    <h2>3 Most Flagged Comments 👎</h2>
+    <div id="most-flagged">Please wait...</div>
+
+    <h2>3 Most Liked Comments 👍</h2>
+    <div id="most-liked">Please wait...</div>
+
+    <script>
+        async function fetchData() {
+            const dateFrom = new Date();
+            dateFrom.setDate(dateFrom.getDate() - 2);
+
+            const response = await fetch('https://kommentare.nzz.ch/api/v1/graph/ql?query={comments(query:{limit:1000}){nodes{asset{title,id},body,id,flags:action_summaries{...%20on%20FlagActionSummary{count}},likes:action_summaries{...%20on%20LikeActionSummary{count}},created_at,asset{title,url}}}}');
+            const data = await response.json();
+            const comments = data.data.comments.nodes;
+
+            const allItems = comments.map(item => {
+                const dateObj = new Date(item.created_at);
+                if (dateObj < dateFrom) return null;
+
+                const flags = item.flags.reduce((sum, d) => sum + (d.count || 0), 0);
+                const likes = item.likes.reduce((sum, d) => sum + (d.count || 0), 0);
+
+                return { flags, likes, item };
+            }).filter(item => item !== null);
+
+            return allItems;
+        }
+
+        function printNice(item) {
+            const title = escapeHtml(item.item.asset.title);
+            const id = item.item.asset.id;
+            const commentId = item.item.id;
+            let host = new URL(item.item.asset.url).hostname;
+            host = host.replace("https://.", "").replace("www.", "").replace(".ch", "");
+            // paywall bypass
+            const url = `https://vamp.nzz.ch/${host}/webview/ld.${id}?commentId=${commentId}`;
+            const body = escapeHtml(item.item.body);
+            const flags = item.flags;
+            const likes = item.likes;
+
+            return `
+                <div class="comment">
+                    <div class="comment-header"><a href="${url}" target="_blank">${title}</a></div>
+                    <div class="comment-body">"${body}"</div>
+                    <div class="comment-footer">
+                        👎 ${flags} | 👍 ${likes}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function displayComments() {
+            const allItems = await fetchData();
+
+            const mostFlagged = allItems.sort((a, b) => b.flags - a.flags).slice(0, 3);
+            const mostLiked = allItems.sort((a, b) => b.likes - a.likes).slice(0, 3);
+
+            const mostFlaggedContainer = document.getElementById('most-flagged');
+            const mostLikedContainer = document.getElementById('most-liked');
+
+            mostFlaggedContainer.innerHTML = mostFlagged.map(printNice).join('');
+            mostLikedContainer.innerHTML = mostLiked.map(printNice).join('');
+        }
+
+        function escapeHtml(text) {
+        var map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+
+        return text.replace(/[&<>"']/g, function (m) {
+            return map[m];
+        });
+    }
+
+        displayComments();
+    </script>
+</body>
+</html>
