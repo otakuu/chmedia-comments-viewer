@@ -64,8 +64,8 @@
             const id = item.item.asset.id;
             const commentId = item.item.id;
             // paywall bypass
-            const url = `https://vamp.nzz.ch/webview/ld.${id}?commentId=${commentId}`;
-            //const url = item.item.asset.url +"?commentId="+ commentId;
+            //const url = `https://vamp.nzz.ch/webview/ld.${id}?commentId=${commentId}`;
+            const url = item.item.asset.url +"?commentId="+ commentId;
             const body = escapeHtml(item.item.body);
             const flags = item.flags;
             const likes = item.likes;
