@@ -24,7 +24,6 @@
             margin-top: 10px;
             color: #555;
             font-weight: bold;
-
         }
     </style>
 </head>
@@ -61,21 +60,21 @@
         }
 
         function printNice(item) {
-            const title = item.item.asset.title;
+            const title = escapeHtml(item.item.asset.title);
             const id = item.item.asset.id;
             const commentId = item.item.id;
             let host = new URL(item.item.asset.url).hostname;
             host = host.replace("https://.", "").replace("www.", "").replace(".ch", "");
             // paywall bypass
             const url = `https://vamp.nzz.ch/${host}/webview/ld.${id}?commentId=${commentId}`;
-            const body = item.item.body;
+            const body = escapeHtml(item.item.body);
             const flags = item.flags;
             const likes = item.likes;
 
             return `
                 <div class="comment">
                     <div class="comment-header"><a href="${url}" target="_blank">${title}</a></div>
-                    <div class="comment-body">${body}</div>
+                    <div class="comment-body">"${body}"</div>
                     <div class="comment-footer">
                         👎 ${flags} | 👍 ${likes}
                     </div>
@@ -95,6 +94,20 @@
             mostFlaggedContainer.innerHTML = mostFlagged.map(printNice).join('');
             mostLikedContainer.innerHTML = mostLiked.map(printNice).join('');
         }
+
+        function escapeHtml(text) {
+        var map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+
+        return text.replace(/[&<>"']/g, function (m) {
+            return map[m];
+        });
+    }
 
         displayComments();
     </script>
