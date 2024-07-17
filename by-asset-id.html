@@ -28,7 +28,8 @@
 </head>
 <body>
 <h3>CH Media Comment Viewer</h3>
-<p>This page displays the 3 most flagged and most liked comments from an article <b>(assetId)</b> URL param &assetId=foobar.</p>
+<p>This page displays the 3 most flagged and most liked comments from an article <b>(assetId)</b> URL param
+    &assetId=foobar.</p>
 
 <h1 id="title"></h1>
 
@@ -64,10 +65,22 @@
         const body = escapeHtml(item.item.body);
         const flags = item.flags;
         const likes = item.likes;
+        let time = item.item.created_at;
+        const timeAgo = new Date(time);
+        const now = new Date();
+        const diffMs = now - timeAgo;
+        const diffDays = Math.floor(diffMs / 86400000); // days
+        const diffHrs = Math.floor((diffMs % 86400000) / 3600000); // hours
+
+        if (diffDays > 0) {
+            time = `${diffDays} day and ${diffHrs} hours ago`;
+        } else {
+            time = `${diffHrs} hours ago`;
+        }
 
         return `
                 <div class="comment">
-                    <div class="comment-body">"${body}"</div>
+                    <div class="comment-body">"${body}", ${time}</div>
                     <div class="comment-footer">
                         👎 ${flags} | 👍 ${likes} | <a href="${url}" target="_blank">Link</a>
                     </div>
